@@ -1,15 +1,28 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TodoApi.Db; // Правильный namespace вашей БД
+using TodoApi.Db;
 
 namespace TodoApi.Controllers;
 
-// DTO для обмена данными с фронтендом (Защита от перезаписи UserId/CreatedAt руками клиента)
-public record TaskCreateUpdateDto(string Title, string? Description, bool Completed);
-public record TaskResponseDto(int Id, string Title, string? Description, bool Completed, DateTime UpdatedAt);
+public record TaskCreateUpdateDto(
+    string Title,
+    string? Description,
+    bool Completed
+);
+
+public record TaskResponseDto(
+    int Id,
+    string Title,
+    string? Description,
+    bool Completed,
+    DateTime UpdatedAt
+);
 
 [ApiController]
 [Route("api/tasks")]
+[Authorize]
 public class TasksCrudController : ControllerBase
 {
     private readonly TodoDb _db;
@@ -22,25 +35,59 @@ public class TasksCrudController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetTasks()
     {
+        var userId = GetUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
         var tasks = await _db.Tasks
-            .Select(t => new TaskResponseDto(t.Id, t.Title, t.Description, t.Completed, t.UpdatedAt))
+            .Where(t => t.UserId == userId.Value)
+            .Select(t => new TaskResponseDto(
+                t.Id,
+                t.Title,
+                t.Description,
+                t.Completed,
+                t.UpdatedAt
+            ))
             .ToListAsync();
-            
+
         return Ok(tasks);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TaskResponseDto>> GetTask(int id)
     {
-        var task = await _db.Tasks.FindAsync(id);
-        if (task == null) return NotFound("Задача не найдена.");
+        var userId = GetUserId();
 
-        return Ok(new TaskResponseDto(task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt));
+        if (userId == null)
+            return Unauthorized();
+
+        var task = await _db.Tasks
+            .FirstOrDefaultAsync(t =>
+                t.Id == id &&
+                t.UserId == userId.Value);
+
+        if (task == null)
+            return NotFound("Задача не найдена.");
+
+        return Ok(new TaskResponseDto(
+            task.Id,
+            task.Title,
+            task.Description,
+            task.Completed,
+            task.UpdatedAt
+        ));
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateTask([FromBody] TaskCreateUpdateDto dto)
+    public async Task<IActionResult> CreateTask(
+        [FromBody] TaskCreateUpdateDto dto)
     {
+        var userId = GetUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
         if (string.IsNullOrWhiteSpace(dto.Title))
         {
             return BadRequest("Название задачи обязательно.");
@@ -53,33 +100,49 @@ public class TasksCrudController : ControllerBase
             Completed = dto.Completed,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            UserId = 1 // Дефолтный ID из OnModelCreating
+            UserId = userId.Value
         };
-
-        // Заглушка: вяжем к первому юзеру, пока Бэкендер №1 пилит auth
-        var firstUser = await _db.Users.FirstOrDefaultAsync();
-        if (firstUser != null)
-        {
-            task.UserId = firstUser.Id;
-        }
 
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
 
-        var response = new TaskResponseDto(task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt);
-        return CreatedAtAction(nameof(GetTask), new { id = task.Id }, response);
+        var response = new TaskResponseDto(
+            task.Id,
+            task.Title,
+            task.Description,
+            task.Completed,
+            task.UpdatedAt
+        );
+
+        return CreatedAtAction(
+            nameof(GetTask),
+            new { id = task.Id },
+            response
+        );
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskCreateUpdateDto dto)
+    public async Task<IActionResult> UpdateTask(
+        int id,
+        [FromBody] TaskCreateUpdateDto dto)
     {
+        var userId = GetUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
         if (string.IsNullOrWhiteSpace(dto.Title))
         {
             return BadRequest("Название задачи не может быть пустым.");
         }
 
-        var task = await _db.Tasks.FindAsync(id);
-        if (task == null) return NotFound("Задача не найдена.");
+        var task = await _db.Tasks
+            .FirstOrDefaultAsync(t =>
+                t.Id == id &&
+                t.UserId == userId.Value);
+
+        if (task == null)
+            return NotFound("Задача не найдена.");
 
         task.Title = dto.Title;
         task.Description = dto.Description;
@@ -87,19 +150,51 @@ public class TasksCrudController : ControllerBase
         task.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        
-        return Ok(new TaskResponseDto(task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt));
+
+        return Ok(new TaskResponseDto(
+            task.Id,
+            task.Title,
+            task.Description,
+            task.Completed,
+            task.UpdatedAt
+        ));
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
-        var task = await _db.Tasks.FindAsync(id);
-        if (task == null) return NotFound("Задача не найдена.");
+        var userId = GetUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var task = await _db.Tasks
+            .FirstOrDefaultAsync(t =>
+                t.Id == id &&
+                t.UserId == userId.Value);
+
+        if (task == null)
+            return NotFound("Задача не найдена.");
 
         _db.Tasks.Remove(task);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = $"Задача с ID {id} успешно удалена." });
+        return Ok(new
+        {
+            message = $"Задача с ID {id} успешно удалена."
+        });
+    }
+
+    // Получить ID пользователя из JWT
+    private int? GetUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (int.TryParse(userIdClaim, out var userId))
+        {
+            return userId;
+        }
+
+        return null;
     }
 }

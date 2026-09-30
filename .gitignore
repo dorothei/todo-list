@@ -67,3 +67,7 @@ node_modules/
 front/node_modules/
 dist/
 front/dist/
+
+# Visual Studio
+.vs/
+**/.vs/
