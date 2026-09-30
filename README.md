@@ -1,6 +1,6 @@
 # 🚀 TodoList
 
-**REST API для управления задачами**, разработанный в рамках командного проекта по продуктовому программированию.
+**Приложение для управления задачами**, разработанное в рамках командного проекта по продуктовому программированию. Проект включает серверную часть (REST API) и клиентское приложение на React.
 
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
@@ -10,6 +10,7 @@
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white)
 
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
@@ -18,10 +19,32 @@
 
 ---
 
+## 📖 Содержание
+
+- [О проекте](#-о-проекте)
+- [Технологический стек](#-технологический-стек)
+- [Архитектура](#-архитектура)
+- [Структура проекта](#-структура-проекта)
+- [Требования](#-требования)
+- [Установка и запуск](#-установка-и-запуск)
+- [Клиентская часть](#-клиентская-часть)
+- [Конфигурация](#-конфигурация)
+- [Документация API](#-документация-api)
+- [Модели данных](#-модели-данных)
+- [Планы развития](#-планы-развития)
+- [Команда](#-команда)
+- [Лицензия](#-лицензия)
+
+---
+
 ## 🎯 О проекте
 
-**TodoApi** — серверная часть приложения для управления задачами. Предоставляет REST API для работы с пользователями и их задачами, поддерживает хранение данных в SQLite и автоматическую генерацию интерактивной документации через Swagger.
-Проект разрабатывается командой в рамках учебного курса по продуктовому программированию и включает как серверную, так и клиентскую части.
+**TodoList** — приложение для управления задачами. Проект состоит из двух независимых частей:
+
+- **Backend** — REST API на ASP.NET Core, хранит пользователей и их задачи в SQLite, предоставляет интерактивную документацию через Swagger.
+- **Frontend** — SPA-приложение на React + Vite, обеспечивающее удобный интерфейс для работы с задачами: список, создание, редактирование, удаление и отметка о выполнении.
+
+Проект разрабатывается командой в рамках учебного курса по продуктовому программированию.
 
 ---
 
@@ -44,7 +67,7 @@
 | ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB) | Библиотека для построения пользовательских интерфейсов |
 | ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white) | Сборщик и dev-сервер |
 | ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black) | Язык разработки клиентской части |
-| ![React Router](https://img.shields.io/badge/React_Router-CA4245?logo=reactrouter&logoColor=white) | Маршрутизация в SPA |
+| ![React Router](https://img.shields.io/badge/React_Router-CA4245?logo=reactrouter&logoColor=white) | Клиентская маршрутизация в SPA |
 | ![CSS](https://img.shields.io/badge/CSS-1572B6?logo=css3&logoColor=white) | Стилизация интерфейса |
 | ![Fetch API](https://img.shields.io/badge/Fetch_API-FF6F00?logo=javascript&logoColor=white) | Выполнение HTTP-запросов к серверу |
 | ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white) | Статический анализ и контроль качества кода |
@@ -69,35 +92,56 @@
 Приложение построено по клиент-серверной архитектуре:
 
 ```
-┌─────────────────┐       HTTP/JSON       ┌──────────────────┐
-│                 │  ───────────────────▶ │                  │
-│  🎨 Frontend    │                       │  ⚙️ Backend      │
-│  React + Vite   │  ◀─────────────────── │  ASP.NET Core    │
-│                 │                       │                  │
-└─────────────────┘                       └────────┬─────────┘
-                                                   │
-                                                   │ EF Core
-                                                   ▼
-                                          ┌──────────────────┐
-                                          │   🗄️ SQLite      │
-                                          │    (Todo.db)     │
-                                          └──────────────────┘
+┌──────────────────────────┐        HTTP/JSON        ┌──────────────────────────┐
+│                          │  ───────────────────▶   │                          │
+│  🎨 Frontend             │                         │  ⚙️ Backend              │
+│                          │                         │                          │
+│  • React                 │  ◀───────────────────   │  • ASP.NET Core          │
+│  • Vite                  │                         │  • Entity Framework Core │
+│  • React Router DOM      │                         │  • Swagger               │
+│  • Fetch API             │                         │                          │
+│                          │                         │                          │
+└──────────────────────────┘                         └────────────┬─────────────┘
+                                                                  │
+                                                                  │ EF Core
+                                                                  ▼
+                                                       ┌──────────────────────────┐
+                                                       │   🗄️ SQLite (Todo.db)   │
+                                                       └──────────────────────────┘
 ```
 
-Взаимодействие между клиентом и сервером осуществляется посредством REST API с обменом данными в формате JSON. CORS-политика настроена для обеспечения кросс-доменных запросов с фронтенда.
+- **Frontend** общается с backend через `Fetch API`, получая и отправляя JSON.
+- **Backend** обрабатывает запросы, валидирует данные и через `EF Core` работает с базой `SQLite`.
+- **CORS-политика** настроена на сервере, чтобы клиент мог свободно обращаться к API при разработке.
 
 ---
 
 ## 📂 Структура проекта
 
 ```
-TodoApi/
-├── 📄 Program.cs                    # Точка входа, конфигурация приложения
-├── 📄 TodoDb.cs                     # Модели данных и контекст EF Core
-├── 📄 TodoApi.csproj                # Описание проекта и зависимостей
-├── ⚙️ appsettings.json              # Основные настройки приложения
-├── ⚙️ appsettings.Development.json  # Настройки для среды разработки
-└── 🗄️ Todo.db                       # Файл базы данных (создаётся автоматически)
+TodoList/
+│
+├── backend/                          # 🔧 Серверная часть
+│   ├── Program.cs                    # Точка входа, конфигурация приложения
+│   ├── TodoDb.cs                     # Модели данных и контекст EF Core
+│   ├── TodoApi.csproj                # Описание проекта и зависимостей
+│   ├── appsettings.json              # Основные настройки
+│   ├── appsettings.Development.json  # Настройки для среды разработки
+│   └── Todo.db                       # Файл базы данных (создаётся автоматически)
+│
+└── client/                           # 🎨 Клиентская часть
+    ├── public/                       # Статические ресурсы
+    ├── src/
+    │   ├── components/               # Переиспользуемые React-компоненты
+    │   ├── pages/                    # Страницы приложения (роуты)
+    │   ├── api/                      # Обёртки над Fetch API для работы с backend
+    │   ├── styles/                   # CSS-стили
+    │   ├── App.jsx                   # Корневой компонент, роутинг
+    │   └── main.jsx                  # Точка входа Vite
+    ├── index.html                    # HTML-шаблон
+    ├── package.json                  # Зависимости и скрипты
+    ├── vite.config.js                # Конфигурация Vite
+    └── .eslintrc.cjs                 # Конфигурация ESLint
 ```
 
 ---
@@ -117,9 +161,8 @@ TodoApi/
 ### ⚙️ Backend
 
 ```bash
-# Клонирование репозитория
-git clone https://github.com/<organization>/<repository>.git
-cd <repository>
+# Переход в директорию backend
+cd backend
 
 # Восстановление зависимостей
 dotnet restore
@@ -127,6 +170,8 @@ dotnet restore
 # Запуск приложения
 dotnet run
 ```
+
+Файл базы данных `Todo.db` создаётся автоматически при первом запуске.
 
 ### 🎨 Frontend
 
@@ -143,21 +188,35 @@ npm run dev
 # Сборка production-версии
 npm run build
 
+# Предпросмотр production-сборки
+npm run preview
+
 # Проверка кода линтером
 npm run lint
 ```
 
+> ⚠️ **Важно:** для полноценной работы интерфейса backend должен быть запущен параллельно — клиент обращается к API по адресу из конфигурации.
+
 ---
 
-### 🌐 CORS
+## 🎨 Клиентская часть
 
-Политика CORS `AllowAll` разрешает запросы с любого источника, что удобно в процессе разработки. Для production-окружения рекомендуется ограничить список разрешённых источников. ⚠️
+### Что реализовано
+
+- 🗂️ **Маршрутизация** через `React Router DOM` — переходы между страницами без перезагрузки
+- 📋 **Просмотр списка задач** — получение данных с backend через `Fetch API`
+- ➕ **Создание задач** — форма с отправкой `POST`-запроса
+- ✏️ **Редактирование задач** — обновление через `PUT`-запрос
+- ✅ **Отметка выполнения** — переключение статуса задачи
+- 🗑️ **Удаление задач** — `DELETE`-запрос с обновлением списка
+- 🎨 **Стилизация** на чистом CSS — без сторонних UI-библиотек
+- 🧹 **Линтинг** через `ESLint` с плагинами для React
 
 ---
 
 ## 📘 Документация API
 
-Интерактивная документация доступна через **Swagger UI** после запуска приложения.
+Интерактивная документация доступна через **Swagger UI**.
 
 ### 📋 Основные эндпоинты
 
@@ -173,46 +232,28 @@ npm run lint
 
 ```http
 POST /api/tasks
-Content-Type: application/json
-
 {
-  "title": "Пример задачи",
-  "description": "Описание задачи",
-  "userId": 1
+  "title": "string",
+  "description": "string",
+  "completed": true
+}
+
+GET /api/tasks/{id}
+{
+  "id": 0,
+  "title": "string",
+  "description": "string",
+  "completed": true,
+  "updatedAt": "2026-09-30T18:59:24.712Z"
+}
+
+PUT /api/tasks/{id}
+{
+  "title": "string",
+  "description": "string",
+  "completed": true
 }
 ```
-
----
-
-## 🗃️ Модели данных
-
-### 👤 User
-
-Модель пользователя системы.
-
-| Поле | Тип | Обязательное | Описание |
-|---|:---:|:---:|---|
-| `Id` | `int` | ✅ | Уникальный идентификатор |
-| `Name` | `string?` | ❌ | Имя пользователя |
-| `Email` | `string` | ✅ | Адрес электронной почты |
-| `PasswordHash` | `string` | ✅ | Хеш пароля |
-| `Tasks` | `List<TaskItem>` | — | Список задач пользователя |
-
-### ✅ TaskItem
-
-Модель задачи.
-
-| Поле | Тип | Обязательное | Описание |
-|---|:---:|:---:|---|
-| `Id` | `int` | ✅ | Уникальный идентификатор |
-| `Title` | `string` | ✅ | Заголовок задачи |
-| `Description` | `string?` | ❌ | Описание задачи |
-| `Completed` | `bool` | ✅ | Статус выполнения |
-| `CreatedAt` | `DateTime` | ✅ | Дата создания |
-| `UpdatedAt` | `DateTime` | ✅ | Дата последнего обновления |
-| `UserId` | `int` | ✅ | Идентификатор владельца задачи |
-
----
 
 ## 👥 Команда
 
@@ -235,5 +276,3 @@ Content-Type: application/json
 ---
 
 ⭐ Поставьте звезду, если проект оказался полезным
-
-</div>
