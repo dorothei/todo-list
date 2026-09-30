@@ -62,3 +62,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+node_modules/
+front/node_modules/
+dist/
+front/dist/
