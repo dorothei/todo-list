@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import TaskForm from "../components/TaskForm";
 import TaskCard from "../components/TaskCard";
 import { getTasks, updateTask, deleteTask } from "../api/api";
 
 function Tasks() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -157,7 +159,7 @@ function Tasks() {
 
   function handleLogout() {
     localStorage.removeItem("token");
-    window.location.href = "/";
+    navigate("/login", { replace: true });
   }
 
   return (
