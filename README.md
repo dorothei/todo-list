@@ -168,8 +168,6 @@ npm run lint
 - 🎨 **Стилизация** на чистом CSS — без сторонних UI-библиотек
 - 🧹 **Линтинг** через `ESLint` с плагинами для React
 
----
-
 ## 📘 Документация API
 
 Интерактивная документация доступна через **Swagger UI**.
@@ -222,8 +220,6 @@ PUT /api/tasks/{id}
 | Backend-разработчик | [@bajwas3](https://github.com/bajwas3) |
 | Frontend-разработчик | [@qweezy22](https://github.com/qweezy22) |
 | Frontend-разработчик | [@munovsky](https://github.com/munovsky) |
-
----
 
 ## 📄 Лицензия
 
