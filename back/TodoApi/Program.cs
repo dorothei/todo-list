@@ -65,22 +65,7 @@ builder.Services.AddSwaggerGen(options =>
             In = Microsoft.OpenApi.Models.ParameterLocation.Header,
             Description = "Введите JWT токен"
         });
-
-    options.AddSecurityRequirement(
-        new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-        {
-            {
-                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                {
-                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                    {
-                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                },
-                Array.Empty<string>()
-            }
-        });
+    options.OperationFilter<AuthorizeCheckOperationFilter>();
 });
 
 var app = builder.Build();
@@ -90,6 +75,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+
 
 app.UseHttpsRedirection();
 
@@ -109,3 +96,47 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public class AuthorizeCheckOperationFilter : Swashbuckle.AspNetCore.SwaggerGen.IOperationFilter
+{
+    public void Apply(
+        Microsoft.OpenApi.Models.OpenApiOperation operation,
+        Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext context)
+    {
+        var hasAuthorize =
+            context.MethodInfo.GetCustomAttributes(true)
+                .OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+                .Any()
+            ||
+            context.MethodInfo.DeclaringType?
+                .GetCustomAttributes(true)
+                .OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+                .Any() == true;
+
+        var hasAllowAnonymous =
+            context.MethodInfo.GetCustomAttributes(true)
+                .OfType<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>()
+                .Any();
+
+        if (hasAuthorize && !hasAllowAnonymous)
+        {
+            operation.Security = new List<Microsoft.OpenApi.Models.OpenApiSecurityRequirement>
+            {
+                new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                }
+            };
+        }
+    }
+}
