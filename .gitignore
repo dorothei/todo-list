@@ -44,6 +44,13 @@ ScaffoldingReadMe.txt
 *~
 CodeCoverage/
 
+# Db files
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.db
+
 # MSBuild Binary and Structured Log
 *.binlog
 
