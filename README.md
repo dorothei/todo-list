@@ -17,8 +17,6 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-In_Development-yellow?style=for-the-badge)
 
----
-
 ## 🎯 О проекте
 
 **TodoList** — приложение для управления задачами. Проект состоит из двух независимых частей:
