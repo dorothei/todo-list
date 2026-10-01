@@ -43,20 +43,4 @@ public class TodoDb : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>(); 
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        // Инициализируем тестового пользователя, чтобы код Бэкендера №1 не ломал создание задач
-        modelBuilder.Entity<User>().HasData(
-            new User 
-            { 
-                Id = 1, 
-                Name = "Тестовый Пользователь", 
-                Email = "test@todo.com", 
-                PasswordHash = "AQAAAAIAAYagAAAAE..." // Временный фейковый хэш
-            }
-        );
-    }
 }
