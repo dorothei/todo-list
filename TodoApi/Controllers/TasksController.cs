@@ -23,11 +23,11 @@ public record TaskResponseDto(
 [ApiController]
 [Route("api/tasks")]
 [Authorize]
-public class CrudController : ControllerBase
+public class TasksController : ControllerBase
 {
     private readonly TodoDb _db;
 
-    public CrudController(TodoDb db)
+    public TasksController(TodoDb db)
     {
         _db = db;
     }
@@ -36,19 +36,12 @@ public class CrudController : ControllerBase
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetTasks()
     {
         var userId = GetUserId();
-
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         var tasks = await _db.Tasks
             .Where(t => t.UserId == userId.Value)
             .Select(t => new TaskResponseDto(
-                t.Id,
-                t.Title,
-                t.Description,
-                t.Completed,
-                t.UpdatedAt
-            ))
+                t.Id, t.Title, t.Description, t.Completed, t.UpdatedAt))
             .ToListAsync();
 
         return Ok(tasks);
@@ -58,40 +51,25 @@ public class CrudController : ControllerBase
     public async Task<ActionResult<TaskResponseDto>> GetTask(int id)
     {
         var userId = GetUserId();
-
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         var task = await _db.Tasks
-            .FirstOrDefaultAsync(t =>
-                t.Id == id &&
-                t.UserId == userId.Value);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId.Value);
 
-        if (task == null)
-            return NotFound("Задача не найдена.");
+        if (task == null) return NotFound("Задача не найдена.");
 
         return Ok(new TaskResponseDto(
-            task.Id,
-            task.Title,
-            task.Description,
-            task.Completed,
-            task.UpdatedAt
-        ));
+            task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt));
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateTask(
-        [FromBody] TaskCreateUpdateDto dto)
+    public async Task<IActionResult> CreateTask([FromBody] TaskCreateUpdateDto dto)
     {
         var userId = GetUserId();
-
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Title))
-        {
             return BadRequest("Название задачи обязательно.");
-        }
 
         var task = new TaskItem
         {
@@ -106,43 +84,26 @@ public class CrudController : ControllerBase
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
 
-        var response = new TaskResponseDto(
-            task.Id,
-            task.Title,
-            task.Description,
-            task.Completed,
-            task.UpdatedAt
-        );
-
         return CreatedAtAction(
             nameof(GetTask),
             new { id = task.Id },
-            response
-        );
+            new TaskResponseDto(
+                task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt));
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateTask(
-        int id,
-        [FromBody] TaskCreateUpdateDto dto)
+    public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskCreateUpdateDto dto)
     {
         var userId = GetUserId();
-
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(dto.Title))
-        {
             return BadRequest("Название задачи не может быть пустым.");
-        }
 
         var task = await _db.Tasks
-            .FirstOrDefaultAsync(t =>
-                t.Id == id &&
-                t.UserId == userId.Value);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId.Value);
 
-        if (task == null)
-            return NotFound("Задача не найдена.");
+        if (task == null) return NotFound("Задача не найдена.");
 
         task.Title = dto.Title;
         task.Description = dto.Description;
@@ -152,49 +113,49 @@ public class CrudController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new TaskResponseDto(
-            task.Id,
-            task.Title,
-            task.Description,
-            task.Completed,
-            task.UpdatedAt
-        ));
+            task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt));
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteTask(int id)
     {
         var userId = GetUserId();
-
-        if (userId == null)
-            return Unauthorized();
+        if (userId == null) return Unauthorized();
 
         var task = await _db.Tasks
-            .FirstOrDefaultAsync(t =>
-                t.Id == id &&
-                t.UserId == userId.Value);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId.Value);
 
-        if (task == null)
-            return NotFound("Задача не найдена.");
+        if (task == null) return NotFound("Задача не найдена.");
 
         _db.Tasks.Remove(task);
         await _db.SaveChangesAsync();
 
-        return Ok(new
-        {
-            message = $"Задача с ID {id} успешно удалена."
-        });
+        return Ok(new { message = $"Задача с ID {id} успешно удалена." });
     }
 
-    // Получить ID пользователя из JWT
+    [HttpPatch("{id:int}/complete")]
+    public async Task<IActionResult> ToggleComplete(int id)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var task = await _db.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId.Value);
+
+        if (task == null) return NotFound("Задача не найдена.");
+
+        task.Completed = !task.Completed;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new TaskResponseDto(
+            task.Id, task.Title, task.Description, task.Completed, task.UpdatedAt));
+    }
+
     private int? GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (int.TryParse(userIdClaim, out var userId))
-        {
-            return userId;
-        }
-
-        return null;
+        return int.TryParse(userIdClaim, out var userId) ? userId : null;
     }
 }

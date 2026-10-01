@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TodoApi.Db;
 
-// Модель Пользователя (Раздел 2.1 ТЗ)
+// Модель Пользователя
 public class User
 {
     public int Id { get; set; }
@@ -18,7 +18,7 @@ public class User
     public List<TaskItem> Tasks { get; set; } = new();
 }
 
-// Модель Задачи (Раздел 2.2 ТЗ)
+// Модель Задачи
 public class TaskItem
 {
     public int Id { get; set; }
@@ -27,7 +27,7 @@ public class TaskItem
     public string Title { get; set; } = null!; 
     
     public string? Description { get; set; }
-    public bool Completed { get; set; } = false; // <--- Название из вашей БД
+    public bool Completed { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
