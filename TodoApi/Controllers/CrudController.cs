@@ -23,11 +23,11 @@ public record TaskResponseDto(
 [ApiController]
 [Route("api/tasks")]
 [Authorize]
-public class TasksCrudController : ControllerBase
+public class CrudController : ControllerBase
 {
     private readonly TodoDb _db;
 
-    public TasksCrudController(TodoDb db)
+    public CrudController(TodoDb db)
     {
         _db = db;
     }

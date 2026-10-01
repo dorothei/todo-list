@@ -9,11 +9,11 @@ namespace TodoApi.Controllers;
 [ApiController]
 [Route("api/tasks")]
 [Authorize]
-public class TasksViewController : ControllerBase
+public class ViewController : ControllerBase
 {
     private readonly TodoDb _db;
 
-    public TasksViewController(TodoDb db)
+    public ViewController(TodoDb db)
     {
         _db = db;
     }
