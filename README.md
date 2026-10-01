@@ -73,9 +73,13 @@
 ```
 TodoList/
 │
-├── backend/                          # 🔧 Серверная часть
-│   ├── Program.cs                    # Точка входа, конфигурация приложения
-│   ├── TodoDb.cs                     # Модели данных и контекст EF Core
+├── TodoApi/                          # 🔧 Серверная часть
+|   ├── Controllers/                  # Контроллеры
+|   |   ├── AuthController.cs         # Контроллер аутентификации
+|   |   ├── TasksController.cs        
+│   ├── Program.cs                    # Точка входа, конфигурация приложения 
+|   ├── TodoDb/                       # База данных
+│   |   ├── TodoDb.cs                     # Модели данных и контекст EF Core
 │   ├── TodoApi.csproj                # Описание проекта и зависимостей
 │   ├── appsettings.json              # Основные настройки
 │   ├── appsettings.Development.json  # Настройки для среды разработки
@@ -109,38 +113,34 @@ TodoList/
 ### ⚙️ Backend
 
 ```bash
-# Переход в директорию backend
-cd backend
+# Переход в директорию
+cd TodoApi
 
 # Восстановление зависимостей
 dotnet restore
+
+# Сгенерируйте свой ключ JWT
+[Convert]::ToBase64String((1..64 | ForEach-Object { Get-Random -Maximum 256 }))
+
+dotnet user-secrets set "Jwt:Key" "<ваш ключ>"
+dotnet user-secrets set "Jwt:Issuer" "TodoApi"
+dotnet user-secrets set "Jwt:Audience" "TodoApi"
 
 # Запуск приложения
 dotnet run
 ```
 
-Файл базы данных `Todo.db` создаётся автоматически при первом запуске.
-
 ### 🎨 Frontend
 
 ```bash
 # Переход в директорию клиента
-cd client
+cd front
 
 # Установка зависимостей
-npm install
+npm install vite
 
 # Запуск в режиме разработки
 npm run dev
-
-# Сборка production-версии
-npm run build
-
-# Предпросмотр production-сборки
-npm run preview
-
-# Проверка кода линтером
-npm run lint
 ```
 
 > ⚠️ **Важно:** для полноценной работы интерфейса backend должен быть запущен параллельно — клиент обращается к API по адресу из конфигурации.
