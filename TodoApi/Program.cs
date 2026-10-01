@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Подключаем базу данных SQLite
 builder.Services.AddDbContext<TodoDb>(opt =>
-    opt.UseSqlite("Data Source=Todo.db"));
+    opt.UseSqlite("Data Source=/data/Todo.db"));
 
 builder.Services.AddControllers();
 
@@ -71,11 +71,14 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+/*if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+}*/
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
@@ -83,11 +86,11 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
                      | ForwardedHeaders.XForwardedProto
 });
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
-app.UseAuthentication();
+app.UseAuthentication();аа
 
 app.UseAuthorization();
 
