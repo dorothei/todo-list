@@ -1,0 +1,33 @@
+services:
+  # --- БЭКЕНД СЛУЖБА ---
+  backend:
+    container_name: todo-backend
+    build:
+      context: ./TodoApi
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    volumes:
+      - todo-db-data:/app/TodoDb
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Добавляем переменные, которые требует ваш бэкенд для авторизации:
+      - Jwt__Key=DUMMY_SECRET_KEY_GENERATED_FOR_DOCKER_COMPOSE_COMPE_1234567890_JWT
+      - Jwt__Issuer=TodoApi
+      - Jwt__Audience=TodoApi
+    restart: always
+
+  # --- ЗАДЕЛ ДЛЯ ФРОНТЕНДА ---
+  # frontend:
+  #   container_name: todo-frontend
+  #   build:
+  #     context: ./front
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   restart: always
+
+volumes:
+  todo-db-data:
