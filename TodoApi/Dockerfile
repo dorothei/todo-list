@@ -1,21 +1,21 @@
 # Этап 1: Сборка и публикация приложения
-FROM ://microsoft.com AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 WORKDIR /app
 
 # Копируем файл проекта и восстанавливаем зависимости
 COPY *.csproj ./
 RUN dotnet restore
 
-# Копируем оставшиеся исходные файлы и собираем релизную версию
+# Копируем исходники и собираем приложение
 COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Этап 2: Запуск готового приложения
-FROM ://microsoft.com
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
-# Создаем папку для базы данных SQLite, чтобы подключить к ней Volume
-RUN mkdir -p /app/TodoDb
+# Создаем системную папку /data в корне контейнера, которую требует бэкенд
+RUN mkdir -p /data
 
 # Копируем собранные файлы из предыдущего этапа
 COPY --from=build-env /app/out .

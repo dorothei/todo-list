@@ -8,10 +8,9 @@ services:
     ports:
       - "5000:8080"
     volumes:
-      - todo-db-data:/app/TodoDb
+      - todo-db-data:/data # Меняем путь с /app/TodoDb на /data
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      # Добавляем переменные, которые требует ваш бэкенд для авторизации:
       - Jwt__Key=DUMMY_SECRET_KEY_GENERATED_FOR_DOCKER_COMPOSE_COMPE_1234567890_JWT
       - Jwt__Issuer=TodoApi
       - Jwt__Audience=TodoApi
