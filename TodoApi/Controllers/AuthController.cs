@@ -11,14 +11,27 @@ using TodoApi.Db;
 
 namespace TodoApi.Controllers;
 
-public record RegisterRequest(
-    [property: Required, MinLength(2), MaxLength(100)] string Name,
-    [property: Required, EmailAddress, MaxLength(256)] string Email,
-    [property: Required, MinLength(8), MaxLength(128)] string Password);
+public class RegisterRequest
+{
+    [Required]
+    [MinLength(2)]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    [MaxLength(256)]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [MinLength(8)]
+    [MaxLength(128)]
+    public string Password { get; set; } = string.Empty;
+}
 
 public record LoginRequest(
-    [property: Required, EmailAddress, MaxLength(256)] string Email,
-    [property: Required, MaxLength(128)] string Password);
+    [Required, EmailAddress, MaxLength(256)] string Email,
+    [Required, MaxLength(128)] string Password);
 
 public record RegisterSuccessResponseDto(
     string Message,

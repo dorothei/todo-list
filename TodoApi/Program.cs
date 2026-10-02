@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
@@ -15,6 +16,8 @@ builder.Services.AddDbContext<TodoDb>(opt =>
     opt.UseSqlite("Data Source=Todo.db"));
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 

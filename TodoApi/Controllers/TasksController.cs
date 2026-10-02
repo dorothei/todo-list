@@ -1,22 +1,26 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using TodoApi.Db;
 
 namespace TodoApi.Controllers;
 
-public record TaskCreateUpdateDto(
-    [property: Required(ErrorMessage = "Название задачи обязательно.")]
-    [property: MinLength(1), MaxLength(200)]
-    string Title,
+public class TaskCreateUpdateDto
+{
+    [Required(ErrorMessage = "Название задачи обязательно.")]
+    [MinLength(1)]
+    [MaxLength(200)]
+    public string Title { get; set; } = string.Empty;
 
-    [property: MaxLength(2000)]
-    string? Description,
+    [MaxLength(2000)]
+    public string? Description { get; set; }
 
-    bool Completed);
+    public bool Completed { get; set; }
+}
 
 public record TaskResponseDto(
     int Id,
@@ -24,6 +28,15 @@ public record TaskResponseDto(
     string? Description,
     bool Completed,
     DateTime UpdatedAt);
+
+public record TasksMetaDto(
+    int Total,
+    int Page,
+    int Limit,
+    int TotalPages
+    );
+
+public record TasksPagedResponseDto(IEnumerable<TaskResponseDto> Data, TasksMetaDto Meta);
 
 public record DeleteResponseDto(string Message);
 
@@ -43,20 +56,38 @@ public class TasksController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetTasks()
+    public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetTasks(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 10)
     {
         var userId = GetUserId();
         if (userId == null) return UnauthorizedProblem();
 
-        var tasks = await _db.Tasks
-            .Where(t => t.UserId == userId.Value)
+        if (page < 1 || limit < 1)
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "page и limit должны быть больше 0."
+            });
+
+        var query = _db.Tasks.Where(t => t.UserId == userId.Value);
+
+        var total = await query.CountAsync();
+
+        var tasks = await query
+            .Skip((page - 1) * limit)
+            .Take(limit)
             .Select(t => new TaskResponseDto(
                 t.Id, t.Title, t.Description, t.Completed, t.UpdatedAt))
             .ToListAsync();
 
-        return Ok(tasks);
+        var totalPages = (int)Math.Ceiling((double)total / limit);
+
+        return Ok(new TasksPagedResponseDto(tasks, new TasksMetaDto(total, page, limit, totalPages)));
     }
 
     [HttpGet("{id:int}")]
