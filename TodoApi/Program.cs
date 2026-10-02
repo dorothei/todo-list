@@ -1,17 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Mvc;
 using TodoApi.Db;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Подключаем базу данных SQLite
 builder.Services.AddDbContext<TodoDb>(opt =>
-    opt.UseSqlite("Data Source=/data/Todo.db"));
+    opt.UseSqlite("Data Source=Todo.db"));
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 
@@ -19,6 +25,8 @@ if (string.IsNullOrEmpty(jwtKey))
 {
     throw new InvalidOperationException("JWT key не найден в конфигурации.");
 }
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -89,6 +97,22 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 // app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "Internal Server Error",
+            Detail = "Внутренняя ошибка сервера."
+        });
+    });
+});
 
 app.UseAuthentication();
 
