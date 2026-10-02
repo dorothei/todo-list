@@ -4,14 +4,15 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Tasks from "./pages/Tasks";
+import type { FC, PropsWithChildren } from "react";
 
-function ProtectedRoute({ children }) {
+const ProtectedRoute: FC<PropsWithChildren> = ({ children }) => {
   return localStorage.getItem("token") ? children : <Navigate to="/login" replace />;
-}
+};
 
-function PublicOnlyRoute({ children }) {
+const PublicOnlyRoute: FC<PropsWithChildren> = ({ children }) => {
   return localStorage.getItem("token") ? <Navigate to="/" replace /> : children;
-}
+};
 
 function App() {
   return (

@@ -1,5 +1,20 @@
-function TaskCard({ task, selected, onSelect, onToggle }) {
-  function handleToggle(event) {
+import type { MouseEvent } from "react";
+import type { Todo } from "../types/todo";
+
+interface TaskCardProps {
+  task: Todo;
+  selected: boolean;
+  onSelect: (task: Todo) => void;
+  onToggle: (task: Todo) => void;
+}
+
+function TaskCard({
+  task,
+  selected,
+  onSelect,
+  onToggle,
+}: TaskCardProps) {
+  function handleToggle(event: MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
 
     onToggle(task);

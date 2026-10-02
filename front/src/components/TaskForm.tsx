@@ -1,12 +1,19 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { createTask } from "../api/api";
+import type { Todo } from "../types/todo";
 
-function TaskForm({ onTaskCreated }) {
+interface Props {
+  onTaskCreated: (task: Todo) => void;
+}
+
+
+function TaskForm({ onTaskCreated }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError("");
@@ -23,7 +30,7 @@ function TaskForm({ onTaskCreated }) {
 
       setTitle("");
       setDescription("");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       setError("Не удалось создать задачу");
     }

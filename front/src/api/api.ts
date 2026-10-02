@@ -1,6 +1,17 @@
-const API_URL = "http://localhost:5177";
+import type {
+  DeleteTaskResponse,
+  LoginResponse,
+  RegisterResponse,
+  Todo,
+} from "../types/todo";
 
-function withAuthorization(options = {}) {
+const API_URL = "";
+
+type RequestOptions = Omit<RequestInit, "headers"> & {
+  headers?: Record<string, string>;
+};
+
+function withAuthorization(options: RequestOptions = {}): RequestOptions {
   const token = localStorage.getItem("token");
 
   return {
@@ -12,8 +23,12 @@ function withAuthorization(options = {}) {
   };
 }
 
-async function request(path, options = {}, errorMessage) {
-  let response;
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  errorMessage: string,
+): Promise<T> {
+  let response: Response;
 
   try {
     response = await fetch(`${API_URL}${path}`, options);
@@ -22,7 +37,7 @@ async function request(path, options = {}, errorMessage) {
   }
 
   const responseText = await response.text();
-  let data = null;
+  let data: unknown = null;
 
   if (responseText) {
     try {
@@ -34,15 +49,25 @@ async function request(path, options = {}, errorMessage) {
 
   if (!response.ok) {
     const serverMessage =
-      typeof data === "string" ? data : data?.message;
+      typeof data === "string"
+        ? data
+        : typeof data === "object" &&
+            data !== null &&
+            "message" in data &&
+            typeof data.message === "string"
+          ? data.message
+          : undefined;
 
     throw new Error(serverMessage || errorMessage);
   }
 
-  return data;
+  return data as T;
 }
 
-export async function login(email, password) {
+export async function login(
+  email: string,
+  password: string,
+): Promise<LoginResponse> {
   return request(
     "/api/auth/login",
     {
@@ -56,7 +81,10 @@ export async function login(email, password) {
   );
 }
 
-export async function register(email, password) {
+export async function register(
+  email: string,
+  password: string,
+): Promise<RegisterResponse> {
   return request(
     "/api/auth/register",
     {
@@ -70,7 +98,7 @@ export async function register(email, password) {
   );
 }
 
-export async function getTasks() {
+export async function getTasks(): Promise<Todo[]> {
   return request(
     "/api/tasks",
     withAuthorization(),
@@ -78,7 +106,10 @@ export async function getTasks() {
   );
 }
 
-export async function createTask(title, description) {
+export async function createTask(
+  title: string,
+  description: string,
+): Promise<Todo> {
   return request(
     "/api/tasks",
     withAuthorization({
@@ -92,7 +123,7 @@ export async function createTask(title, description) {
   );
 }
 
-export async function updateTask(id, title, description, completed) {
+export async function updateTask(id: number, title: string, description: string, completed: boolean): Promise<Todo> {
   return request(
     `/api/tasks/${id}`,
     withAuthorization({
@@ -106,7 +137,7 @@ export async function updateTask(id, title, description, completed) {
   );
 }
 
-export async function deleteTask(id) {
+export async function deleteTask(id: number): Promise<DeleteTaskResponse> {
   return request(
     `/api/tasks/${id}`,
     withAuthorization({ method: "DELETE" }),

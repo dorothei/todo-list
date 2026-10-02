@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import TaskForm from "../components/TaskForm";
 import TaskCard from "../components/TaskCard";
 import { getTasks, updateTask, deleteTask } from "../api/api";
+import type { Todo } from "../types/todo";
 
 function Tasks() {
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<Todo[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState<Todo | null>(null);
 
   const [darkMode, setDarkMode] = useState(false);
 
@@ -44,7 +46,7 @@ function Tasks() {
     };
   }, []);
 
-  function replaceTask(updatedTask) {
+  function replaceTask(updatedTask: Todo) {
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task,
@@ -52,13 +54,13 @@ function Tasks() {
     );
   }
 
-  function handleSelect(task) {
+  function handleSelect(task: Todo) {
     setSelectedTask(task);
     setIsEditing(false);
     setEditError("");
   }
 
-  async function handleToggle(task) {
+  async function handleToggle(task: Todo) {
     try {
       const updatedTask = await updateTask(
         task.id,
@@ -101,7 +103,7 @@ function Tasks() {
     }
   }
 
-  function handleTaskCreated(task) {
+  function handleTaskCreated(task: Todo) {
     setTasks((currentTasks) => [...currentTasks, task]);
 
     setSelectedTask(task);
@@ -125,7 +127,7 @@ function Tasks() {
     setEditError("");
   }
 
-  async function saveEditing(event) {
+  async function saveEditing(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setEditError("");
@@ -135,12 +137,17 @@ function Tasks() {
       return;
     }
 
+    if (!selectedTask) {
+      return;
+    }
+
     try {
+      const task = selectedTask;
       const updatedTask = await updateTask(
-        selectedTask.id,
+        task.id,
         editTitle.trim(),
         editDescription.trim(),
-        selectedTask.completed,
+        task.completed,
       );
 
       replaceTask(updatedTask);
@@ -168,6 +175,16 @@ function Tasks() {
         <div className="brand">TODO</div>
 
         <div className="topbar-actions">
+
+          <a
+            className="github-link"
+            href="https://github.com/qweezy22/todo-list2"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+        
           <button
             className="icon-button"
             onClick={handleThemeToggle}
@@ -175,10 +192,11 @@ function Tasks() {
           >
             {darkMode ? "☀" : "☾"}
           </button>
-
+        
           <button className="logout-button" onClick={handleLogout}>
             ↪ Выйти
           </button>
+        
         </div>
       </header>
 
@@ -212,6 +230,7 @@ function Tasks() {
                 selected={selectedTask?.id === task.id}
                 onSelect={handleSelect}
                 onToggle={handleToggle}
+          
               />
             ))}
           </div>

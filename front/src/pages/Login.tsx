@@ -1,22 +1,32 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api/api";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+interface LoginErrors {
+  email?: string;
+  password?: string;
+}
+
+interface LoginLocationState {
+  registered?: boolean;
+}
+
 function Login() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const locationState = useLocation().state as LoginLocationState | null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<LoginErrors>({});
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const nextErrors = {};
+    const nextErrors: LoginErrors = {};
     const normalizedEmail = email.trim();
 
     if (!normalizedEmail) {
@@ -41,14 +51,16 @@ function Login() {
     try {
       const data = await login(normalizedEmail, password);
 
-      if (!data?.token) {
+      if (!data.token) {
         throw new Error("Сервер не вернул token");
       }
 
       localStorage.setItem("token", data.token);
       navigate("/", { replace: true });
-    } catch (error) {
-      setServerError(error.message || "Не удалось войти");
+    } catch (error: unknown) {
+      setServerError(
+        error instanceof Error ? error.message : "Не удалось войти",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +72,7 @@ function Login() {
         <div className="auth-brand">TODO</div>
         <h1 id="login-title">Вход</h1>
 
-        {location.state?.registered && (
+        {locationState?.registered && (
           <div className="auth-success" role="status">
             Аккаунт создан. Теперь войдите.
           </div>

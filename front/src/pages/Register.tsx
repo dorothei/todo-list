@@ -1,22 +1,29 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/api";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface RegisterErrors {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
 
 function Register() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<RegisterErrors>({});
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const nextErrors = {};
+    const nextErrors: RegisterErrors = {};
     const normalizedEmail = email.trim();
 
     if (!normalizedEmail) {
@@ -47,8 +54,12 @@ function Register() {
     try {
       await register(normalizedEmail, password);
       navigate("/login", { replace: true, state: { registered: true } });
-    } catch (error) {
-      setServerError(error.message || "Не удалось зарегистрироваться");
+    } catch (error: unknown) {
+      setServerError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось зарегистрироваться",
+      );
     } finally {
       setIsLoading(false);
     }
