@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/api";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { getFieldErrors, registerSchema } from "./authSchemas";
 
 function Register() {
   const navigate = useNavigate();
@@ -16,36 +15,29 @@ function Register() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const nextErrors = {};
-    const normalizedEmail = email.trim();
-
-    if (!normalizedEmail) {
-      nextErrors.email = "Введите email";
-    } else if (!EMAIL_PATTERN.test(normalizedEmail)) {
-      nextErrors.email = "Введите корректный email";
-    }
-
-    if (!password) {
-      nextErrors.password = "Введите пароль";
-    }
-
-    if (!confirmPassword) {
-      nextErrors.confirmPassword = "Подтвердите пароль";
-    } else if (password !== confirmPassword) {
-      nextErrors.confirmPassword = "Пароли не совпадают";
-    }
+    const validation = registerSchema.safeParse({
+      email,
+      password,
+      confirmPassword,
+    });
+    const nextErrors = validation.success
+      ? {}
+      : getFieldErrors(validation.error);
 
     setErrors(nextErrors);
     setServerError("");
 
-    if (Object.keys(nextErrors).length > 0) {
+    if (!validation.success) {
       return;
     }
+
+    const { email: normalizedEmail, password: validatedPassword } =
+      validation.data;
 
     setIsLoading(true);
 
     try {
-      await register(normalizedEmail, password);
+      await register(normalizedEmail, validatedPassword);
       navigate("/login", { replace: true, state: { registered: true } });
     } catch (error) {
       setServerError(error.message || "Не удалось зарегистрироваться");

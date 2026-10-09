@@ -57,6 +57,9 @@ export async function login(email, password) {
 }
 
 export async function register(email, password) {
+  const emailName = email.split("@", 1)[0].slice(0, 100);
+  const name = emailName.length >= 2 ? emailName : "User";
+
   return request(
     "/api/auth/register",
     {
@@ -64,18 +67,24 @@ export async function register(email, password) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ name, email, password }),
     },
     "Не удалось зарегистрироваться",
   );
 }
 
 export async function getTasks() {
-  return request(
+  const response = await request(
     "/api/tasks",
     withAuthorization(),
     "Не удалось загрузить задачи",
   );
+
+  return Array.isArray(response)
+    ? response
+    : Array.isArray(response?.data)
+      ? response.data
+      : [];
 }
 
 export async function createTask(title, description) {

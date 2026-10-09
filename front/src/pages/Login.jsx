@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api/api";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { getFieldErrors, loginSchema } from "./authSchemas";
 
 function Login() {
   const navigate = useNavigate();
@@ -16,30 +15,25 @@ function Login() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const nextErrors = {};
-    const normalizedEmail = email.trim();
-
-    if (!normalizedEmail) {
-      nextErrors.email = "Введите email";
-    } else if (!EMAIL_PATTERN.test(normalizedEmail)) {
-      nextErrors.email = "Введите корректный email";
-    }
-
-    if (!password) {
-      nextErrors.password = "Введите пароль";
-    }
+    const validation = loginSchema.safeParse({ email, password });
+    const nextErrors = validation.success
+      ? {}
+      : getFieldErrors(validation.error);
 
     setErrors(nextErrors);
     setServerError("");
 
-    if (Object.keys(nextErrors).length > 0) {
+    if (!validation.success) {
       return;
     }
+
+    const { email: normalizedEmail, password: validatedPassword } =
+      validation.data;
 
     setIsLoading(true);
 
     try {
-      const data = await login(normalizedEmail, password);
+      const data = await login(normalizedEmail, validatedPassword);
 
       if (!data?.token) {
         throw new Error("Сервер не вернул token");
